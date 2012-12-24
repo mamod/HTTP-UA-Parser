@@ -10,7 +10,8 @@ My_WriteMakefile(
     VERSION_FROM      => 'lib/HTTP/UA/Parser.pm', # finds $VERSION
     EXE_FILES    => ['script/ua_parser'],
     PREREQ_PM         => {
-	'YAML::Tiny' => 0
+	'YAML::Tiny' => 0,
+	'LWP::UserAgent' => 0
     },
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/HTTP/UA/Parser.pm', # retrieve abstract from module

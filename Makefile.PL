@@ -28,13 +28,13 @@ sub My_WriteMakefile {
     } elsif (-e $regexes2) {
 	copy($regexes2, $dest) or die "File cannot be copied.";
     } else {
-	print "Can't locate regexes.yaml file\n";
-	print "We will try to fetch it from a remote server\n";
-	my $regexContent = getRegexes();
-	open my $file,'>',$dest."/regexes.yaml" or die "can't open file $!";
-	print $file $regexContent;
-	close $file;
-	print "regexes.yaml downloaded successfully\n";
+	#print "Can't locate regexes.yaml file\n";
+	#print "We will try to fetch it from a remote server\n";
+	#my $regexContent = getRegexes();
+	#open my $file,'>',$dest."/regexes.yaml" or die "can't open file $!";
+	#print $file $regexContent;
+	#close $file;
+	#print "regexes.yaml downloaded successfully\n";
     }
     WriteMakefile(%params);
 }

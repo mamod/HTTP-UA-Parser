@@ -3,4 +3,5 @@
 .*\.old$
 ^Makefile$
 ^\.git
-^Tiny.pm$
+^.*Yaml\/Tiny.pm$
+lib/Yaml/Tiny.yaml

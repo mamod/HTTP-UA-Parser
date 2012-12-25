@@ -30,7 +30,7 @@ sub My_WriteMakefile {
 	print "Can't locate regexes.yaml file\n";
 	print "We will try to fetch it from a remote server\n";
 	my $regexContent = getRegexes();
-	open my $file,'>',$dest."/regexes.yaml" or die "can't open file $!";
+	open my $file,'>',$regexes2 or die "can't open file $!";
 	print $file $regexContent;
 	close $file;
 	print "regexes.yaml downloaded successfully\n";
@@ -38,52 +38,8 @@ sub My_WriteMakefile {
     WriteMakefile(%params);
 }
 
-
 sub getRegexes {
-    my $response;
-    my $stream;
-    
-    #trying curl
-    print "Trying curl\n";
-    open $stream, "-|", "wget https://raw.github.com/tobie/ua-parser/master/regexes.yaml" or die;
-    while(<$stream>) { $response .= "$_" };
-    
-    ##trying wget
-    if (!$response){
-	print "Trying wget\n";
-	open $stream, "-|", "wget https://raw.github.com/tobie/ua-parser/master/regexes.yaml" or die;
-	while(<$stream>) { $response .= "$_" };
-    }
-    
-    ##trying lwp-request
-    if (!$response){
-	print "Trying lwp-request\n";
-	open $stream, "-|", "lwp-request https://raw.github.com/tobie/ua-parser/master/regexes.yaml" or die;
-	while(<$stream>) { $response .= "$_" };
-    }
-    
-    return $response if $response;
-    print "Trying to fetch using LWP::UserAgent";
-    
-    eval "use LWP::UserAgent";
-    if ($@){
-	print "We couldn't locate LWP::UserAgent Module\n";
-	print "LWP::UserAgent required to fetch regexes.yaml from server\n";
-	print "Please install it or get regexes.yaml file manually from\n";
-	print "https://raw.github.com/tobie/ua-parser/master/regexes.yaml\n";
-	print "and place it in the root folder of this distro\n";
-	print "then run Makefile.PL again\n";
-	exit;
-    }
-    my $ua = LWP::UserAgent->new;
-    $ua->timeout(5);
-    $ua->env_proxy();
-    $response = $ua->get('https://raw.github.com/tobie/ua-parser/master/regexes.yaml');
-    if ($response->is_success) {
-        return $response->content;
-    } else {
-        print "Request aborted\n";
-        exit;
-    }
+    require $Bin.'/script/ua_parser';
+    my $con = getFile();
+    return $con;
 }
-

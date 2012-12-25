@@ -2,9 +2,6 @@
 use strict;
 use warnings;
 use Getopt::Long;
-use LWP::UserAgent;
-
-use Data::Dumper;
 use File::Copy;
 use HTTP::UA::Parser;
 
@@ -32,9 +29,9 @@ sub help {
 }
 
 sub update {
-    my $PATH = HTTP::UA::Parser::Utils::getPath();
     print "Fetching Regex file from server...\n";
-    my $content = send_http_request('https://raw.github.com/tobie/ua-parser/master/regexes.yaml');
+    my $content = getFile();
+    my $PATH = HTTP::UA::Parser::Utils::getPath();
     my $temp = $PATH.'/temp_regexes.yaml';
     my $old = $PATH.'/regexes.yaml';
     open my $file,'>',$temp or die "can't open create file tmp $!";
@@ -45,17 +42,48 @@ sub update {
     print "File updated successfully\n";
 }
 
-
-sub send_http_request {
-    my $url = shift;
+sub getFile {
+    my $response;
+    my $stream;
+    my $url = 'https://raw.github.com/tobie/ua-parser/master/regexes.yaml';
+    #trying curl
+    print "Trying curl\n";
+    open $stream, "-|", "curl $url" or die;
+    while(<$stream>) { $response .= "$_" };
+    
+    ##trying wget
+    if (!$response){
+	print "Trying wget\n";
+	open $stream, "-|", "wget $url" or die;
+	while(<$stream>) { $response .= "$_" };
+    }
+    
+    ##trying lwp-request
+    if (!$response){
+	print "Trying lwp-request\n";
+	open $stream, "-|", "lwp-request $url" or die;
+	while(<$stream>) { $response .= "$_" };
+    }
+    
+    return $response if $response;
+    print "Trying to fetch using LWP::UserAgent\n";
+    eval "use LWP::UserAgent";
+    if ($@){
+	print "We couldn't locate LWP::UserAgent Module\n";
+	print "LWP::UserAgent required to fetch regexes.yaml from server\n";
+	print "Please install it or get regexes.yaml file manually from\n";
+	print "https://raw.github.com/tobie/ua-parser/master/regexes.yaml\n";
+	print "and place it in the root folder of this distro\n";
+	print "then run Makefile.PL again\n";
+	exit;
+    }
     my $ua = LWP::UserAgent->new;
     $ua->timeout(5);
     $ua->env_proxy();
-    my $response = $ua->get($url);
+    $response = $ua->get($url);
     if ($response->is_success) {
         return $response->content;
-    }
-    else {
+    } else {
         print "Request aborted\n";
         exit;
     }
@@ -84,5 +112,5 @@ sub stringify {
     }
 }
 
-
+1;
 

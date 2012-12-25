@@ -10,8 +10,7 @@ My_WriteMakefile(
     VERSION_FROM      => 'lib/HTTP/UA/Parser.pm', # finds $VERSION
     EXE_FILES    => ['script/ua_parser'],
     PREREQ_PM         => {
-	'YAML::Tiny' => 0,
-	'LWP::UserAgent' => 0
+	'YAML::Tiny' => 0
     },
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/HTTP/UA/Parser.pm', # retrieve abstract from module
@@ -28,19 +27,44 @@ sub My_WriteMakefile {
     } elsif (-e $regexes2) {
 	copy($regexes2, $dest) or die "File cannot be copied.";
     } else {
-	#print "Can't locate regexes.yaml file\n";
-	#print "We will try to fetch it from a remote server\n";
-	#my $regexContent = getRegexes();
-	#open my $file,'>',$dest."/regexes.yaml" or die "can't open file $!";
-	#print $file $regexContent;
-	#close $file;
-	#print "regexes.yaml downloaded successfully\n";
+	print "Can't locate regexes.yaml file\n";
+	print "We will try to fetch it from a remote server\n";
+	my $regexContent = getRegexes();
+	open my $file,'>',$dest."/regexes.yaml" or die "can't open file $!";
+	print $file $regexContent;
+	close $file;
+	print "regexes.yaml downloaded successfully\n";
     }
     WriteMakefile(%params);
 }
 
 
 sub getRegexes {
+    my $response;
+    my $stream;
+    
+    #trying curl
+    print "Trying curl\n";
+    open $stream, "-|", "wget https://raw.github.com/tobie/ua-parser/master/regexes.yaml" or die;
+    while(<$stream>) { $response .= "$_" };
+    
+    ##trying wget
+    if (!$response){
+	print "Trying wget\n";
+	open $stream, "-|", "wget https://raw.github.com/tobie/ua-parser/master/regexes.yaml" or die;
+	while(<$stream>) { $response .= "$_" };
+    }
+    
+    ##trying lwp-request
+    if (!$response){
+	print "Trying lwp-request\n";
+	open $stream, "-|", "lwp-request https://raw.github.com/tobie/ua-parser/master/regexes.yaml" or die;
+	while(<$stream>) { $response .= "$_" };
+    }
+    
+    return $response if $response;
+    print "Trying to fetch using LWP::UserAgent";
+    
     eval "use LWP::UserAgent";
     if ($@){
 	print "We couldn't locate LWP::UserAgent Module\n";
@@ -54,7 +78,7 @@ sub getRegexes {
     my $ua = LWP::UserAgent->new;
     $ua->timeout(5);
     $ua->env_proxy();
-    my $response = $ua->get('https://raw.github.com/tobie/ua-parser/master/regexes.yaml');
+    $response = $ua->get('https://raw.github.com/tobie/ua-parser/master/regexes.yaml');
     if ($response->is_success) {
         return $response->content;
     } else {
@@ -62,5 +86,4 @@ sub getRegexes {
         exit;
     }
 }
-
 

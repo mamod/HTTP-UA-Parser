@@ -39,54 +39,7 @@ sub My_WriteMakefile {
 }
 
 sub getRegexes {
-    #require $Bin.'/script/ua_parser';
+    require './script/ua_parser';
     my $con = getFile();
     return $con;
-}
-
-sub getFile {
-    my $response;
-    my $stream;
-    my $url = 'https://raw.github.com/tobie/ua-parser/master/regexes.yaml';
-    #trying curl
-    print "Trying curl\n";
-    open $stream, "-|", "curl $url" or die;
-    while(<$stream>) { $response .= "$_" };
-    
-    ##trying wget
-    if (!$response){
-	print "Trying wget\n";
-	open $stream, "-|", "wget $url" or die;
-	while(<$stream>) { $response .= "$_" };
-    }
-    
-    ##trying lwp-request
-    if (!$response){
-	print "Trying lwp-request\n";
-	open $stream, "-|", "lwp-request $url" or die;
-	while(<$stream>) { $response .= "$_" };
-    }
-    
-    return $response if $response;
-    print "Trying to fetch using LWP::UserAgent\n";
-    eval "use LWP::UserAgent";
-    if ($@){
-	print "We couldn't locate LWP::UserAgent Module\n";
-	print "LWP::UserAgent required to fetch regexes.yaml from server\n";
-	print "Please install it or get regexes.yaml file manually from\n";
-	print "https://raw.github.com/tobie/ua-parser/master/regexes.yaml\n";
-	print "and place it in the root folder of this distro\n";
-	print "then run Makefile.PL again\n";
-	exit;
-    }
-    my $ua = LWP::UserAgent->new;
-    $ua->timeout(5);
-    $ua->env_proxy();
-    $response = $ua->get($url);
-    if ($response->is_success) {
-        return $response->content;
-    } else {
-        print "Request aborted\n";
-        exit;
-    }
 }

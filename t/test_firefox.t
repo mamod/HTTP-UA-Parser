@@ -1,6 +1,6 @@
 use strict;
 use FindBin qw($Bin);
-use Yaml::Tiny;
+use Yaml::Tiny ();
 use Data::Dumper;
 use Test::More 'no_plan';
 
@@ -24,9 +24,9 @@ foreach my $st (@{$yaml}){
     #print $browser->patch() . "\n";
     #print $st->{patch};
     ok ($browser->family eq $st->{family}
-        && $browser->major == $st->{major}
-        && $browser->minor == $st->{minor}
-        && $browser->patch == $st->{patch}, 'firefox '. $st->{family});
+        && $browser->major eq $st->{major}
+        && $browser->minor eq $st->{minor}
+        && $browser->patch eq $st->{patch}, 'firefox '. $st->{family});
 }
 
 __END__

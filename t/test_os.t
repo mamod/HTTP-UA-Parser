@@ -1,6 +1,6 @@
 use strict;
 use FindBin qw($Bin);
-use Yaml::Tiny;
+use Yaml::Tiny ();
 use Test::More 'no_plan';
 
 use HTTP::UA::Parser;
@@ -16,9 +16,9 @@ foreach my $st (@{$yaml}){
     my $os = $r->os;
     
     ok ($os->family eq $st->{family}
-        && $os->major == $st->{major}
-        && $os->minor == $st->{minor}
-        && $os->patch == $st->{patch}, 'OS '. $st->{family});
+        && $os->major eq $st->{major}
+        && $os->minor eq $st->{minor}
+        && $os->patch eq $st->{patch}, 'OS '. $st->{family});
 }
 
 __END__

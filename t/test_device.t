@@ -1,7 +1,5 @@
 use strict;
 use FindBin qw($Bin);
-use Yaml::Tiny ();
-use Data::Dumper;
 use Test::More 'no_plan';
 
 BEGIN { use_ok('HTTP::UA::Parser') };

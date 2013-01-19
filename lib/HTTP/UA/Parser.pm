@@ -2,7 +2,7 @@ package HTTP::UA::Parser;
 use strict;
 use warnings;
 use YAML::Tiny 'LoadFile';
-our $VERSION = 0.002;
+our $VERSION = 0.003;
 my ($REGEX,$PATH);
 my $PACKAGE = __PACKAGE__;
 
@@ -38,7 +38,6 @@ sub new {
     
     my $self = {
         user_agent => $ua || $ENV{HTTP_USER_AGENT},
-	modules => \%INC,
 	path => $PATH
     };
     return bless($self,$class);
@@ -82,7 +81,7 @@ package HTTP::UA::Parser::UA;
 sub new {
     my $class = shift;
     my $self = {
-	family => $_[0],
+	family => $_[0] || 'Other',
 	major => $_[1],
 	minor => $_[2],
 	patch => $_[3]
@@ -138,7 +137,7 @@ package HTTP::UA::Parser::OS;
 sub new {
     my $class = shift;
     my $self = {
-	family => $_[0],
+	family => $_[0] || 'Other',
 	major => $_[1],
 	minor => $_[2],
 	patch => $_[3],
@@ -199,7 +198,7 @@ sub new {
     my $class = shift;
     
     my $self = {
-	family => $_[0]
+	family => $_[0] || 'Other'
     };
     
     return bless($self, $PACKAGE.'::Stringify' );

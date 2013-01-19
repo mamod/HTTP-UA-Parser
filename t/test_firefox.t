@@ -1,7 +1,7 @@
 use strict;
+use warnings;
 use FindBin qw($Bin);
-use Yaml::Tiny ();
-use Data::Dumper;
+#use Yaml::Tiny ();
 use Test::More 'no_plan';
 
 BEGIN { use_ok('HTTP::UA::Parser') };
@@ -23,10 +23,10 @@ foreach my $st (@{$yaml}){
     
     #print $browser->patch() . "\n";
     #print $st->{patch};
-    ok ($browser->family eq $st->{family}
-        && $browser->major eq $st->{major}
-        && $browser->minor eq $st->{minor}
-        && $browser->patch eq $st->{patch}, 'firefox '. $st->{family});
+    is ($browser->family, $st->{family});
+    is ($browser->major,$st->{major});
+    is ($browser->minor,$st->{minor});
+    is ($browser->patch,$st->{patch}, 'firefox '. $st->{family});
 }
 
 __END__

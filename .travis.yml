@@ -4,4 +4,4 @@ perl:
   - "5.14"
 
 install:
-  - "cpanm -n Yaml::Tiny"
+  - "cpanm -n YAML::Tiny"

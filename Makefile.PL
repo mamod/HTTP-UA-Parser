@@ -33,6 +33,7 @@ sub My_WriteMakefile {
 	open my $file,'>',$regexes2 or die "can't open file $!";
 	print $file $regexContent;
 	close $file;
+	copy($regexes2, $dest) or die "File cannot be copied.";
 	print "regexes.yaml downloaded successfully\n";
     }
     

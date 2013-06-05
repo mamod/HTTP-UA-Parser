@@ -2,7 +2,7 @@ package HTTP::UA::Parser;
 use strict;
 use warnings;
 use YAML::Tiny 'LoadFile';
-our $VERSION = 0.003;
+our $VERSION = '0.004';
 my ($REGEX,$PATH);
 my $PACKAGE = __PACKAGE__;
 
@@ -41,10 +41,6 @@ sub new {
 	path => $PATH
     };
     return bless($self,$class);
-}
-
-sub update {
-    
 }
 
 sub parse {
@@ -119,10 +115,10 @@ sub _makeParsers {
         my $str = shift;
         my @m = HTTP::UA::Parser::Utils::exe( $regexp , $str );
         if (!@m) { return undef; }
-        my $family = $famRep ? HTTP::UA::Parser::Utils::replace($famRep,qr/\$1/,$m[0]) : $m[0];
-        my $major = $majorRep || $m[1];
-        my $minor = $minorRep || $m[2];
-        my $patch = $patchRep || $m[3];
+        my $family = defined $famRep ? HTTP::UA::Parser::Utils::replace($famRep,qr/\$1/,$m[0]) : $m[0];
+        my $major = defined $majorRep ?  $majorRep : $m[1];
+        my $minor = defined $minorRep ?  $minorRep : $m[2];
+        my $patch = defined $patchRep ?  $patchRep : $m[3];
         return ($family, $major, $minor, $patch);
     };
     
@@ -175,8 +171,6 @@ sub _makeParsers {
     my $parser = sub {
         my $str = shift;
         my @m = HTTP::UA::Parser::Utils::exe( $regexp , $str );
-        #return $m[0];
-        #die Dumper \@m;
         if (!@m) { return undef; }
         my $family = $famRep ? HTTP::UA::Parser::Utils::replace($famRep,qr/\$1/,$m[0]) : $m[0];
         my $major = $majorRep || $m[1];
@@ -418,7 +412,7 @@ Mamod A. Mehyar, E<lt>mamod.mehyar@gmail.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012 by Mamod A. Mehyar
+Copyright (C) 2013 by Mamod A. Mehyar
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.10.1 or,

@@ -1,6 +1,5 @@
 use HTTP::UA::Parser;
 use strict;
-use warnings;
 use Test::More;
 use FindBin qw($Bin);
 
@@ -29,6 +28,5 @@ if ($@){
 }
 
 done_testing();
-
 
 1;

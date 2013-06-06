@@ -1,5 +1,5 @@
 #!perl
-use Yaml::Tiny;
+use YAML::Tiny;
 use LWP::UserAgent;
 
 my $resources = 'https://raw.github.com/tobie/ua-parser/master/test_resources/';

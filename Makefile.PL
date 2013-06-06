@@ -40,14 +40,8 @@ sub My_WriteMakefile {
     WriteMakefile(%params);
 }
 
-sub getRegexes {
-    #require 'script/ua_parser';
-    my $con = getFile();
-    return $con;
-}
-
 ##also update in script/ua_parser if changed here
-sub getFile {
+sub getRegexes {
     my $response;
     my $stream;
     my $url = 'https://raw.github.com/tobie/ua-parser/master/regexes.yaml';

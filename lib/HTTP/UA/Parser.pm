@@ -209,8 +209,8 @@ sub _makeParsers {
     my ($obj) = shift;
     my $regexp = $obj->{regex};
     my $deviceRep = $obj->{device_replacement};
-    my $brandRep = $obj->{brand};
-    my $modelRep = $obj->{model};
+    my $brandRep = $obj->{brand_replacement};
+    my $modelRep = $obj->{model_replacement};
     my $parser = sub {
         my $str = shift;
         my @m = HTTP::UA::Parser::Utils::exe( $regexp , $str );

@@ -13,6 +13,9 @@ eval {
         $r->parse($st->{user_agent_string});
         my $os = $r->device;
         is ($os->family, $st->{family});
+        is ($os->family, $st->{family});
+        is ($os->brand, $st->{brand});
+        is ($os->model, $st->{model});
     }
 };
 

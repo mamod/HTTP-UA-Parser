@@ -167,13 +167,13 @@ sub _makeParsers {
 package HTTP::UA::Parser::Device;
 
 sub new {
-  my $class = shift;
-  my $self = {
-    family => $_[0] || 'Other',
-    brand => $_[1],
-    model => $_[2]
-  };
-  return bless($self, __PACKAGE__ );
+    my $class = shift;
+    my $self = {
+	family => $_[0] || 'Other',
+	brand => $_[1],
+	model => $_[2]
+    };
+    return bless($self, 'HTTP::UA::Parser::Base');
 }
 
 sub makeParser {
@@ -222,10 +222,6 @@ sub _makeParsers {
     };
     return $parser;
 }
-
-sub family     { shift->{family}   }
-sub brand      { shift->{brand}    }
-sub model      { shift->{model}    }
 
 ##=============================================================================
 ## Stringify Package
@@ -278,7 +274,8 @@ sub major	{	shift->{major}		}
 sub minor  	{	shift->{minor}		}
 sub patch  	{	shift->{patch}		}
 sub patchMinor	{	shift->{patchMinor}	}
-
+sub brand      	{ 	shift->{brand}    	}
+sub model      	{ 	shift->{model}    	}
 ##=============================================================================
 ## Utils Package
 ##=============================================================================

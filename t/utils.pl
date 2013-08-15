@@ -25,7 +25,7 @@ sub fix_yaml {
     my $c;
     while(my $line = <$fh>){
         if ($line){
-            $line =~ s/(\s*(?:family|major|minor|patch|patch_minor):)\s?\n$/$1 ~\n/;
+            $line =~ s/(\s*(?:family|major|minor|patch|patch_minor|brand|model):)\s?\n$/$1 ~\n/;
         }
         $c .= $line;
     }

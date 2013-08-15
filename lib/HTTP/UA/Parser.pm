@@ -2,7 +2,7 @@ package HTTP::UA::Parser;
 use strict;
 use warnings;
 use YAML::Tiny 'LoadFile';
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 my ($REGEX,$PATH);
 my $PACKAGE = __PACKAGE__;
 
@@ -166,12 +166,35 @@ sub _makeParsers {
 ##=============================================================================
 package HTTP::UA::Parser::Device;
 
-sub new {HTTP::UA::Parser::Base::new(@_)}
+sub new {
+  my $class = shift;
+  my $self = {
+    family => $_[0] || 'Other',
+    brand => $_[1],
+    model => $_[2]
+  };
+  return bless($self, __PACKAGE__ );
+}
 
 sub makeParser {
     my $self = shift;
     my $regexes = shift;
-    return HTTP::UA::Parser::Utils::makeParser($regexes,\&_makeParsers);
+    my $makeParser = shift || \&_makeParsers;
+    my @parsers = map {
+        $makeParser->($_);
+    } @{$regexes};
+  
+    my $parser = sub {
+        my $ua = shift;
+        my @obj;
+        foreach my $parser (@parsers){
+            @obj = $parser->($ua);
+            return HTTP::UA::Parser::Device->new(@obj) if $obj[0];
+        }
+        HTTP::UA::Parser::Device->new();
+    };
+  
+    return $parser;
 }
 
 sub parse {
@@ -186,15 +209,24 @@ sub _makeParsers {
     my ($obj) = shift;
     my $regexp = $obj->{regex};
     my $deviceRep = $obj->{device_replacement};
+    my $brandRep = $obj->{brand_replacement};
+    my $modelRep = $obj->{model_replacement};
     my $parser = sub {
         my $str = shift;
         my @m = HTTP::UA::Parser::Utils::exe( $regexp , $str );
         if (!@m) { return undef; }
-        my $family = $deviceRep ? HTTP::UA::Parser::Utils::replace($deviceRep,qr/\$1/,$m[0]) : $m[0];
-        return ($family);
+        my $family = $deviceRep ? HTTP::UA::Parser::Utils::multiReplace($deviceRep, \@m) : ($m[0] eq "1" ? undef : $m[0]);
+        my $brand  = $brandRep  ? HTTP::UA::Parser::Utils::multiReplace($brandRep, \@m)  : undef;
+        my $model  = $modelRep  ? HTTP::UA::Parser::Utils::multiReplace($modelRep, \@m)  : ($m[0] eq "1" ? undef : $m[0]);
+        return ($family, $brand, $model);
     };
     return $parser;
 }
+
+sub family     { shift->{family}   }
+sub brand      { shift->{brand}    }
+sub model      { shift->{model}    }
+
 ##=============================================================================
 ## Stringify Package
 ##=============================================================================
@@ -302,6 +334,22 @@ sub replace {
     return $stringToReplace;
 }
 
+sub multiReplace {
+    my ($stringToReplace, $matches) = @_;
+  
+    if ($stringToReplace =~ qr/\$/) {
+        for my $i (0 .. $#{$matches}) {
+            my $expr = qr/\$/.($i+1);
+            my $replaceWith = @{$matches}[$i];
+            $stringToReplace =~ s{$expr}{$replaceWith};
+        }
+    }
+    if ($stringToReplace eq '') {
+        undef $stringToReplace;
+    }
+    return $stringToReplace;
+}
+
 sub exe {
     my ($expr,$string) = @_;
     my @m = $string =~ $expr;
@@ -356,7 +404,9 @@ Perl port of the ua-parser project - L<https://github.com/tobie/ua-parser>.
     print $r->os->patch;              # -> undef
     
     print $r->device->family;         # -> "iPhone"
-    
+    print $r->device->brand;          # -> "Apple"
+    print $r->device->model;          # -> "iPhone"
+
 =head1 Methods
 
 =head2 new()
@@ -412,6 +462,14 @@ returns versions patch part of os/browser
 =item patchMinor()
 
 returns version patch minor part of os/browser
+
+=item brand()
+
+returns brand name of device
+
+=item model()
+
+returns model name of device
 
 =back
     

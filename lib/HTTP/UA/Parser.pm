@@ -2,8 +2,8 @@ package HTTP::UA::Parser;
 use strict;
 use warnings;
 use YAML::Tiny 'LoadFile';
-our $VERSION = '0.005';
-my ($REGEX,$PATH);
+our $VERSION = '0.006';
+my ($REGEX, $PATH, $PARSER);
 my $PACKAGE = __PACKAGE__;
 
 sub new {
@@ -81,8 +81,7 @@ sub new {HTTP::UA::Parser::Base::new(@_)}
 sub parse {
     my $self = shift;
     my $ua = shift;
-    my $regexes = $REGEX->{user_agent_parsers};
-    my $parser = $self->makeParser($regexes);
+    my $parser = $PARSER->{ua} || ($PARSER->{ua} = $self->makeParser($REGEX->{user_agent_parsers}));
     return $parser->($ua);
 }
 
@@ -100,10 +99,11 @@ sub _makeParsers {
     my $majorRep = $obj->{v1_replacement};
     my $minorRep = $obj->{v2_replacement};
     my $patchRep = $obj->{v3_replacement};
+    my $qr = HTTP::UA::Parser::Utils::regex($regexp);
     
     my $parser = sub {
         my $str = shift;
-        my @m = HTTP::UA::Parser::Utils::exe( $regexp , $str );
+        my @m = $str =~ $qr;
         if (!@m) { return undef; }
         my $family = defined $famRep ? HTTP::UA::Parser::Utils::replace($famRep,qr/\$1/,$m[0]) : $m[0];
         my $major = defined $majorRep ?  $majorRep : $m[1];
@@ -125,8 +125,7 @@ sub new {HTTP::UA::Parser::Base::new(@_)}
 sub parse {
     my $self = shift;
     my $ua = shift;
-    my $regexes = $REGEX->{os_parsers};
-    my $parser = $self->makeParser($regexes);
+    my $parser = $PARSER->{os} || ($PARSER->{os} = $self->makeParser($REGEX->{os_parsers}));
     return $parser->($ua);
 }
 
@@ -145,10 +144,11 @@ sub _makeParsers {
     my $minorRep = $obj->{os_v2_replacement};
     my $patchRep = $obj->{os_v3_replacement};
     my $patchMinorRep = $obj->{os_v4_replacement};
+    my $qr = HTTP::UA::Parser::Utils::regex($regexp);
     
     my $parser = sub {
         my $str = shift;
-        my @m = HTTP::UA::Parser::Utils::exe( $regexp , $str );
+        my @m = $str =~ $qr;
         if (!@m) { return undef; }
         my $family = $famRep ? HTTP::UA::Parser::Utils::replace($famRep,qr/\$1/,$m[0]) : $m[0];
         my $major = defined $majorRep ? $majorRep : $m[1];
@@ -176,6 +176,18 @@ sub new {
     return bless($self, 'HTTP::UA::Parser::Base');
 }
 
+sub toString {
+    my $self = shift;
+    return $self->family;
+}
+
+sub parse {
+    my $self = shift;
+    my $ua = shift;
+    my $parser = $PARSER->{device} || ($PARSER->{device} = $self->makeParser($REGEX->{device_parsers}));
+    return $parser->($ua);
+}
+
 sub makeParser {
     my $self = shift;
     my $regexes = shift;
@@ -191,29 +203,25 @@ sub makeParser {
             @obj = $parser->($ua);
             return HTTP::UA::Parser::Device->new(@obj) if $obj[0];
         }
+    
         HTTP::UA::Parser::Device->new();
     };
   
     return $parser;
 }
 
-sub parse {
-    my $self = shift;
-    my $ua = shift;
-    my $regexes = $REGEX->{device_parsers};
-    my $parser = $self->makeParser($regexes);
-    return $parser->($ua);
-}
-
 sub _makeParsers {
     my ($obj) = shift;
     my $regexp = $obj->{regex};
+    my $regexp_flag = $obj->{regex_flag};
     my $deviceRep = $obj->{device_replacement};
     my $brandRep = $obj->{brand_replacement};
     my $modelRep = $obj->{model_replacement};
+    my $qr = HTTP::UA::Parser::Utils::regex($regexp, $regexp_flag);
+    
     my $parser = sub {
         my $str = shift;
-        my @m = HTTP::UA::Parser::Utils::exe( $regexp , $str );
+        my @m = $str =~ $qr;
         if (!@m) { return undef; }
         my $family = $deviceRep ? HTTP::UA::Parser::Utils::multiReplace($deviceRep, \@m) : ($m[0] eq "1" ? undef : $m[0]);
         my $brand  = $brandRep  ? HTTP::UA::Parser::Utils::multiReplace($brandRep, \@m)  : undef;
@@ -334,12 +342,13 @@ sub replace {
 sub multiReplace {
     my ($stringToReplace, $matches) = @_;
   
-    if ($stringToReplace =~ qr/\$/) {
-        for my $i (0 .. $#{$matches}) {
-            my $expr = qr/\$/.($i+1);
-            my $replaceWith = @{$matches}[$i];
-            $stringToReplace =~ s{$expr}{$replaceWith};
-        }
+    for ($stringToReplace) {
+        s{
+            \$(\d)
+        }{
+            @{$matches}[$1-1] || '';
+        }egx;
+        s{\s*$}{};
     }
     if ($stringToReplace eq '') {
         undef $stringToReplace;
@@ -347,10 +356,14 @@ sub multiReplace {
     return $stringToReplace;
 }
 
-sub exe {
-    my ($expr,$string) = @_;
-    my @m = $string =~ $expr;
-    return @m;
+# precompile regex
+sub regex {
+    my ($expr, $flag) = @_;
+    $flag = $flag || '';
+    if ($flag eq "i") {
+      return qr{$expr}i;
+    }
+    return qr{$expr};
 }
 
 sub startsWithDigit {
